@@ -26,7 +26,7 @@ var leftPressed = false;
 var paddleHeight = 10;
 var paddleWidth = 75;
 var brickSpeed = 0.5;
-var paddleCount = 6;
+var paddleCount = 12;
 var paddleX =  getRandomArbitrary(0,canvas.width - paddleWidth);
 var paddleY = (canvas.height-paddleHeight) / 2;	
 
@@ -38,7 +38,7 @@ var paddleSpeed = 1;
 
 var paddles = [];
 for(var c=0; c<paddleCount; c++) {
-    paddles[c] = { x: 0, y: 0, status: 0, jumpStatus: false};}
+    paddles[c] = { x: 0, y: 0, status: 0, moveStatus: false};}
 
 function drawRect() {
     ctx.beginPath();
@@ -76,46 +76,81 @@ function movePaddle(){
         var p = paddles[c];
         if(p.status == 0){
             p.status = 1;
+            p.moveStatus = false;
             if(c < 3){
                 paddleX =  c * paddleWidth;
-                paddleY =  20;//c * 20;//getRandomArbitrary(0,10);
+                paddleY =  -150;//c * 20;//getRandomArbitrary(0,10);
             }
-            else {
+            else if(c > 2 && c < 6) {
                 paddleX = (c-3) * paddleWidth; 
-                paddleY =  130;//getRandomArbitrary(10,100);
+                paddleY =  0;//getRandomArbitrary(10,100);
+            }
+            else if (c > 5 && c < 9){
+                paddleX = (c-6) * paddleWidth; 
+                paddleY =  150;//getRandomArbitrary(10,100);
+            }
+            else{
+                paddleX = (c-9) * paddleWidth; 
+                paddleY =  300;//getRandomArbitrary(10,100);
             }
             p.x = paddleX;
             p.y = paddleY;
             drawPaddle(paddleX,paddleY,paddleWidth,paddleHeight);
             drawPaddleName(paddleX,paddleY,c);
-            drawStatus(paddleX + paddleWidth / 2,paddleY+paddleHeight,p.status );
+            drawStatus(paddleX + paddleWidth / 2,paddleY+paddleHeight,p.moveStatus );
         }
-        else{
+        else{ 
             paddleX =  p.x;
-	        //p.y += 0.1;
+            if(p.moveStatus == true){
+	            p.y += 1;    
+            } 
             paddleY =  p.y ;
+            if (paddleY + paddleHeight > canvas.height  ) {
+	            p.status = 0;
+	            //bricks[c].x = 0;
+	            //p.y = -150;
+	        } 
             drawPaddle(paddleX,paddleY,paddleWidth,paddleHeight);
             drawPaddleName(paddleX,paddleY,c);
-            drawStatus(paddleX + paddleWidth / 2,paddleY+paddleHeight,p.status );
+            drawStatus(paddleX + paddleWidth / 2,paddleY+paddleHeight,p.moveStatus );
         }
     }
 
 }
+
+function moveDetection(){
+for(var c=0; c<paddleCount; c++) {
+	  var b = paddles[c];
+	   if(y + dy + rectHeight  > b.y  && y + dy + rectHeight  < b.y + paddleHeight  && x > b.x && x < b.x + paddleWidth && dy > 0 ) {
+	     y  = b.y - rectHeight;
+		dy = 1;
+		dy = -dy * 1.9;}      
+	if (y + dy <= b.y - 200 )//if (y +  rectHeight <=  b.y - rectHeight * 5   )
+		{
+			dy = -dy / 1.5;
+		}
+}
+}
+
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawRect();
     movePaddle();
 
-    if (y + dy <= jumpHeight /*|| y + dy < -20  */) { //top point
-        dy = -dy ;  // the fall
-        paddleSpeed = 1;
+    if (y + dy < 200 /*|| y + dy < -20  */) { //top point
+        //dy = -dy ;  // the fall
+        //paddleSpeed = 1;
+        dy = 0;
+        for (var num  in paddles){
+            paddles[num].moveStatus =true;
+        }
     }   
     if (y + dy > canvas.height - rectHeight && down != false) {  //bottom point
 	dy = -1;
     }  
      
     
-    y += dy * 2;
+    y += dy ;
     //moveDetection();
     if(rightPressed) {
     x += 5;
