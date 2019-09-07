@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Gamedev Canvas Workshop</title>
+    <style>
+    	* { padding: 0; margin: 0; }
+    	canvas { background: #eee; display: block; margin: 0 auto; }
+    </style>
+</head>
+<body>
+
+<canvas id="myCanvas" width="480" height="320"></canvas>
+
+<script>
+var canvas = document.getElementById("myCanvas");
+var ctx = canvas.getContext("2d");
+var rectWidth = 10;
+var rectHeight = 15;
+var x = canvas.width/2 - 50;
+var y = canvas.height-30;
+var dx = 0;
+var dy = -1;
+var rightPressed = false;
+var leftPressed = false;
+var paddleHeight = 10;
+var paddleWidth = 75;
+var brickSpeed = 0.5;
+var bricksCount = 6;
+var paddleX =  getRandomArbitrary(0,canvas.width - paddleWidth);
+var paddleY = (canvas.height-paddleHeight) / 2;	
+
+var up = true;
+var down = false;
+
+var jumpHeight = 0;
+var paddleSpeed = 1;
+
+var bricks = [];
+for(var c=0; c<bricksCount; c++) {
+     bricks[c] = { x: 0, y: 0, status: 1, jumpStatus: false};}
+
+function drawRect() {
+    ctx.beginPath();
+    ctx.rect(x, y, rectWidth, rectHeight);
+    ctx.fillStyle = "#0095DD";
+    ctx.fill();
+    ctx.closePath();
+}
+
+function getRandomArbitrary(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+function drawPaddleName(pointX,pointY,number) {
+    ctx.font = "16px Arial";
+    ctx.fillStyle = "#009555";
+    ctx.fillText("Number"+number,pointX , pointY);
+}
+function drawJump(pointX,pointY,text) {
+    ctx.font = "16px Arial";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText(text,pointX , pointY);
+}
+
+function drawPaddle() {
+	for (var c=0; c < bricksCount ; c++){
+	if(bricks[c].status == 1 ) { // create new paddle
+       
+        if (c > 2){
+            paddleY = 0;//getRandomArbitrary(-50 ,0 );
+            paddleX =  (c - 3) * paddleWidth;
+        }
+        else {
+        paddleY = 50;//getRandomArbitrary(0 ,50 );
+        paddleX =  c * paddleWidth ;
+        }
+        bricks[c].x = paddleX;
+        bricks[c].y = paddleY;
+        ctx.beginPath();
+        ctx.rect(paddleX, paddleY, paddleWidth, paddleHeight);
+        ctx.fillStyle = "#0095DD";
+        ctx.fill();
+        ctx.closePath();
+        bricks[c].status = 0;
+    }
+    
+	else { // move a paddle to the bottom
+        paddleX =  bricks[c].x;
+        paddleY = bricks[c].y;
+    /*     if (paddleY - y > 200 && bricks[c].jumpStatus == true){ // if paddle  far away from player
+            bricks[c].x = 0;
+            bricks[c].y = 0;
+            bricks[c].jumpStatus = false;
+        } */
+        if (paddleY + paddleHeight > canvas.height || paddleY  - y > 250 ) { // if paddle close to bottom
+        bricks[c].status = 1;
+        bricks[c].x = 0;
+        bricks[c].y = 0;
+       
+	}  
+	paddleY += brickSpeed * paddleSpeed;
+	bricks[c].y = paddleY;
+	ctx.beginPath();
+	ctx.rect(paddleX, paddleY, paddleWidth, paddleHeight);
+	ctx.fillStyle = "#0095DD";
+	ctx.fill();
+	ctx.closePath();
+	drawPaddleName(paddleX,paddleY,c);
+	drawJump(paddleX,paddleY +paddleHeight,parseInt(paddleY));
+    }
+	 
+}
+}
+
+
+
+
+function moveDetection(){
+	 for(var c=0; c<bricksCount; c++) {
+	  var b = bricks[c];
+	   if( b.status == 0 && y + dy + rectHeight  > b.y  && y + dy + rectHeight  < b.y + paddleHeight  && x > b.x && x < b.x + paddleWidth && dy > 0 ) { //check paddle
+		dy = -1 ;
+        jumpHeight = b.y - 200; //jump height
+        paddleSpeed = 6;
+        b.jumpStatus = true;
+        }
+    }
+}
+
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawRect();
+    drawPaddle();
+    
+	
+      if (y + dy <= jumpHeight /* || y + dy < -20 */ ) { //top point
+        dy = -dy ;  // the fall
+        paddleSpeed = 1;
+	    
+    }   
+    if (y + dy > canvas.height - rectHeight && down != false) {  //bottom point
+	dy = -1;
+    }  
+     
+    
+    y += dy * 2;
+    moveDetection();
+    if(rightPressed) {
+    x += 5;
+    if (x + paddleWidth > canvas.width){
+        x = canvas.width - paddleWidth;
+    }
+}
+else if(leftPressed) {
+    x -= 5;
+    if (x < 0){
+        x = 0;
+    }
+}
+}
+
+document.addEventListener("keydown", keyDownHandler, false);
+document.addEventListener("keyup", keyUpHandler, false);
+
+function keyDownHandler(e) {
+    if(e.key == "Right" || e.key == "ArrowRight") {
+        rightPressed = true;
+    }
+    else if(e.key == "Left" || e.key == "ArrowLeft") {
+        leftPressed = true;
+    }
+}
+
+function keyUpHandler(e) {
+    if(e.key == "Right" || e.key == "ArrowRight") {
+        rightPressed = false;
+    }
+    else if(e.key == "Left" || e.key == "ArrowLeft") {
+        leftPressed = false;
+    }
+}
+
+setInterval(draw, 10);
+
+</script>
+
+</body>
+</html>
