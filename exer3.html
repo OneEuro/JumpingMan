@@ -63,70 +63,8 @@ function drawJump(pointX,pointY,text) {
     ctx.fillText(text,pointX , pointY);
 }
 
-function drawPaddle() {
-	for (var c=0; c < bricksCount ; c++){
-	if(bricks[c].status == 1 ) { // create new paddle
-       
-        if (c > 2){
-            paddleY = 0;//getRandomArbitrary(-50 ,0 );
-            paddleX =  (c - 3) * paddleWidth;
-        }
-        else {
-        paddleY = 50;//getRandomArbitrary(0 ,50 );
-        paddleX =  c * paddleWidth ;
-        }
-        bricks[c].x = paddleX;
-        bricks[c].y = paddleY;
-        ctx.beginPath();
-        ctx.rect(paddleX, paddleY, paddleWidth, paddleHeight);
-        ctx.fillStyle = "#0095DD";
-        ctx.fill();
-        ctx.closePath();
-        bricks[c].status = 0;
-    }
-    
-	else { // move a paddle to the bottom
-        paddleX =  bricks[c].x;
-        paddleY = bricks[c].y;
-    /*     if (paddleY - y > 200 && bricks[c].jumpStatus == true){ // if paddle  far away from player
-            bricks[c].x = 0;
-            bricks[c].y = 0;
-            bricks[c].jumpStatus = false;
-        } */
-        if (paddleY + paddleHeight > canvas.height || paddleY  - y > 250 ) { // if paddle close to bottom
-        bricks[c].status = 1;
-        bricks[c].x = 0;
-        bricks[c].y = 0;
-       
-	}  
-	paddleY += brickSpeed * paddleSpeed;
-	bricks[c].y = paddleY;
-	ctx.beginPath();
-	ctx.rect(paddleX, paddleY, paddleWidth, paddleHeight);
-	ctx.fillStyle = "#0095DD";
-	ctx.fill();
-	ctx.closePath();
-	drawPaddleName(paddleX,paddleY,c);
-	drawJump(paddleX,paddleY +paddleHeight,parseInt(paddleY));
-    }
-	 
-}
-}
 
 
-
-
-function moveDetection(){
-	 for(var c=0; c<bricksCount; c++) {
-	  var b = bricks[c];
-	   if( b.status == 0 && y + dy + rectHeight  > b.y  && y + dy + rectHeight  < b.y + paddleHeight  && x > b.x && x < b.x + paddleWidth && dy > 0 ) { //check paddle
-		dy = -1 ;
-        jumpHeight = b.y - 200; //jump height
-        paddleSpeed = 6;
-        b.jumpStatus = true;
-        }
-    }
-}
 
 
 function draw() {
