@@ -26,19 +26,47 @@ var leftPressed = false;
 var paddleHeight = 10;
 var paddleWidth = 75;
 var brickSpeed = 0.5;
-var paddleCount = 12;
+var paddleCount = 3;
 var paddleX =  getRandomArbitrary(0,canvas.width - paddleWidth);
 var paddleY = (canvas.height-paddleHeight) / 2;	
 
+var brickColumnCount = 3;
+var brickRowCount =  3;
+
 var up = true;
 var down = false;
+var start = false;
 
 var jumpHeight = -1000;
 var paddleSpeed = 1;
 
-var paddles = [];
-for(var c=0; c<paddleCount; c++) {
-    paddles[c] = { x: 0, y: 0, status: 0, moveStatus: false};}
+var paddlesStatic = [];
+var paddlesDynamic = [];
+
+function copy(aObject) {
+  if (!aObject) {
+    return aObject;
+  }
+
+  let v;
+  let bObject = Array.isArray(aObject) ? [] : {};
+  for (const k in aObject) {
+    v = aObject[k];
+    bObject[k] = (typeof v === "object") ? copy(v) : v;
+  }
+
+  return bObject;
+}
+
+for(var c=0; c<brickColumnCount; c++) {
+    paddlesStatic[c] = [];
+    for(var r=0; r<brickRowCount; r++) {
+        paddlesStatic[c][r] = { x: r * paddleWidth, y: c * 150 - 150 ,status: 0, moveStatus: false};
+    }
+}
+
+ paddlesDynamic  = copy(paddlesStatic);
+
 
 function drawRect() {
     ctx.beginPath();
@@ -71,30 +99,17 @@ function drawPaddle(x,y,width,height) {
     ctx.closePath();
 }
 
-function movePaddle(){
+function movePaddleOld(){
     for (var c = 0;c < paddleCount; c++){
-        var p = paddles[c];
+        
+	for (var v = 0; v < paddleCount; v++){
+	var p = paddlesDynamic[c][v];
         if(p.status == 0){
             p.status = 1;
-            p.moveStatus = false;
-            if(c < 3){
-                paddleX =  c * paddleWidth;
-                paddleY =  -150;//c * 20;//getRandomArbitrary(0,10);
-            }
-            else if(c > 2 && c < 6) {
-                paddleX = (c-3) * paddleWidth; 
-                paddleY =  0;//getRandomArbitrary(10,100);
-            }
-            else if (c > 5 && c < 9){
-                paddleX = (c-6) * paddleWidth; 
-                paddleY =  150;//getRandomArbitrary(10,100);
-            }
-            else{
-                paddleX = (c-9) * paddleWidth; 
-                paddleY =  300;//getRandomArbitrary(10,100);
-            }
-            p.x = paddleX;
-            p.y = paddleY;
+            p.moveStatus = false; 
+            //p.x = paddlesStatic.x;
+            //p.y = paddlesStatic.y
+	
             drawPaddle(paddleX,paddleY,paddleWidth,paddleHeight);
             drawPaddleName(paddleX,paddleY,c);
             drawStatus(paddleX + paddleWidth / 2,paddleY+paddleHeight,p.moveStatus );
@@ -106,8 +121,8 @@ function movePaddle(){
             } 
             paddleY =  p.y ;
             if (paddleY + paddleHeight > canvas.height  ) {
-	            p.status = 0;
-	            //bricks[c].x = 0;
+	            //p.status = 0;
+	          // p.y = paddlesStatic[][];
 	            //p.y = -150;
 	        } 
             drawPaddle(paddleX,paddleY,paddleWidth,paddleHeight);
@@ -115,20 +130,58 @@ function movePaddle(){
             drawStatus(paddleX + paddleWidth / 2,paddleY+paddleHeight,p.moveStatus );
         }
     }
+    }
+
+}
+
+function movePaddle(){
+    for (var c = 0;c < paddleCount; c++){
+        
+	for (var v = 0; v < paddleCount; v++){
+		var p = paddlesDynamic[c][v];
+		if(p.status == 0){
+		p.status = 1;
+		p.moveStatus = false; 
+		paddleX = p.x;
+		paddleY = p.y;
+		drawPaddle(paddleX,paddleY,paddleWidth,paddleHeight);
+		drawPaddleName(paddleX,paddleY,c);
+		drawStatus(paddleX + paddleWidth / 2,paddleY+paddleHeight,p.moveStatus );
+        }
+        else{ 
+	p.y  += -dy;
+        paddleY = p.y;
+	paddleX = p.x;
+	if (paddleY + paddleHeight > canvas.height  ) {
+	        //p.status = 0;
+		var y = paddlesDynamic[c][v].y;
+		var yNew = paddlesStatic[(c - (paddleCount - 1)) * -1][v].y;
+		paddlesDynamic[c][v].y = paddlesStatic[(c - (paddleCount - 1)) * -1][v].y - 150;
+	            //p.y = -150;
+	        } 
+	drawPaddle(paddleX,paddleY,paddleWidth,paddleHeight);
+        drawPaddleName(paddleX,paddleY,c);
+        drawStatus(paddleX + paddleWidth / 2,paddleY+paddleHeight,p.moveStatus );
+        }
+    }
+    }
 
 }
 
 function moveDetection(){
 for(var c=0; c<paddleCount; c++) {
-	  var b = paddles[c];
+	for (var v = 0; v < paddleCount; v++){
+	  var b = paddlesDynamic[c][v];
 	   if(y + dy + rectHeight  > b.y  && y + dy + rectHeight  < b.y + paddleHeight  && x > b.x && x < b.x + paddleWidth && dy > 0 ) {
 	     y  = b.y - rectHeight;
 		dy = 1;
-		dy = -dy * 1.9;}      
-	if (y + dy <= b.y - 200 )//if (y +  rectHeight <=  b.y - rectHeight * 5   )
+		dy = -dy * 1.9;
+		}    
+}		
+	/* if (y + dy <= b.y - 200 )//if (y +  rectHeight <=  b.y - rectHeight * 5   )
 		{
 			dy = -dy / 1.5;
-		}
+		} */
 }
 }
 
@@ -137,15 +190,17 @@ function draw() {
     drawRect();
     movePaddle();
 
-    if (y + dy < 200 /*|| y + dy < -20  */) { //top point
-        //dy = -dy ;  // the fall
-        //paddleSpeed = 1;
-        dy = 0;
-        for (var num  in paddles){
-            paddles[num].moveStatus =true;
-        }
+    if (y + dy < -1500/*|| y + dy < -20  */) { //top point
+        dy = -dy ;  // the fall
+       // paddleSpeed = 1;
+       // dy = 0;
+        /* for (var num1  in paddlesDynamic){
+		for (var num2  in paddlesDynamic){
+            paddlesDynamic[num1][num2].moveStatus =true;
+		} */
+	
     }   
-    if (y + dy > canvas.height - rectHeight && down != false) {  //bottom point
+    if (y + dy > canvas.height - rectHeight /* && down != false */) {  //bottom point
 	dy = -1;
     }  
      
