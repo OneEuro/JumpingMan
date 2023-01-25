@@ -1,0 +1,381 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Gamedev Canvas Workshop</title>
+    <style>
+    	* { padding: 0; margin: 0; }
+    	canvas { background: #eee; }
+	#myButton {  left:40%; background: green; position: relative; }
+	#container
+	{
+		margin-left: 40%;
+	  height: 480px;
+	  position: relative;
+	  width: 240px;
+	}
+
+	#controls
+	{
+	  bottom: 50%;
+	  left: 0;
+	  position: absolute;
+	  width: 100%;
+	}
+    </style>
+</head>
+<body>
+<div id="container">
+	<canvas id="myCanvas" width="240" height="480"> 
+	</canvas>
+	<menu id="controls">
+		<button id="myButton"  onclick="restartGame()" hidden>Play</button>
+	</menu>
+</div>
+<div id="class">
+</div>
+
+<script>
+
+var canvas = document.getElementById("myCanvas");
+var ctx = canvas.getContext("2d");
+
+var rectWidth = 5;
+var rectHeight = 15;
+
+var x = canvas.width/2;
+var y = canvas.height / 2 + 50;
+var dx = 5;
+var dy = 1; //start speed
+
+var rightPressed = false;
+var leftPressed = false;var upPressed = false;var downPressed = false;
+
+var paddleHeight = 6;
+var paddleWidth = 20;
+var brickRowCount = 14;
+
+var movePaddelsUpFlag = false;
+var movePaddelsDownFlag = false;
+
+
+var paddlesStatic = [];
+var paddlesDynamic = [];
+
+var gameOverFlag = false;
+
+var bottomBorderForGameOver = 0;
+
+let movePaddlesSpeed = 1;
+
+
+let paddleColor = new Map();
+paddleColor.set(1, "#F3330A"); //red
+paddleColor.set(2, "#15F30A"); //green
+paddleColor.set(3, "#0095DD"); //blue
+
+let paddleFlyingCount = new Map();
+paddleFlyingCount.set(1, 0); //red
+paddleFlyingCount.set(2, 0.5); //green
+paddleFlyingCount.set(3, 1); //blue
+
+var accZ = 0;
+
+
+function GetRandomProperties () {
+	return  Math.floor(Math.random() * paddleColor.size) + 1 	
+}	
+	
+
+function deviceMotionHandler(event) {
+
+let koeff = 10;
+ accZ = event.rotationRate.beta ;
+if (accZ >  90) { accZ =  90};
+if (accZ < -90) { accZ = -90};
+//accZ += 90;
+accZ /= koeff;
+
+}
+
+
+	
+function GameVarInit(){	
+	window.addEventListener("devicemotion", deviceMotionHandler);
+	bottomBorderForGameOver = canvas.height + 70;
+	start = true;
+	for(var c=0; c<brickRowCount; c++) { //generating  properties for paddles
+		var paddlePostionY = c * 50 + 50;
+		if(paddlePostionY < bottomBorderForGameOver){ // determine count of paddles on canvas
+			var randomProp = GetRandomProperties ();
+			paddlesStatic[c] = { x: getRandomArbitrary(60,canvas.width - 60) , y: paddlePostionY ,flyingCount: paddleFlyingCount.get(randomProp), color:paddleColor.get(randomProp),status : false };
+			}
+	}
+	paddlesDynamic  = copy(paddlesStatic);
+	
+}
+function copy(aObject) {
+  if (!aObject) {
+    return aObject;
+  }
+  let v;
+  let bObject = Array.isArray(aObject) ? [] : {};
+  for (const k in aObject) {
+    v = aObject[k];
+    bObject[k] = (typeof v === "object") ? copy(v) : v;
+  }
+  return bObject;
+}
+function drawRect() {
+    ctx.beginPath();
+    ctx.rect(x, y, rectWidth, rectHeight);
+    ctx.fillStyle = "#0095DD";
+    ctx.fill();
+    ctx.closePath();
+}
+
+function drawPlayer(x,y) {
+	ctx.beginPath();
+	//fill part
+	ctx.moveTo(x,y);
+	ctx.lineTo(x-5, y+8);
+	ctx.lineTo(x+5, y+8);
+	ctx.moveTo(x,y-2);
+	ctx.arc(x,y-2,3,0,Math.PI*2); 
+	ctx.fill();
+	ctx.closePath();
+	//stroke part
+	ctx.beginPath();
+	ctx.strokeStyle  = "#000000";
+	ctx.moveTo(x-5,y+3); //hands
+	ctx.lineTo(x+5,y+3);//hands
+	ctx.moveTo(x-2,y+8);//legs
+	ctx.lineTo(x-2,y+12);//legs
+	ctx.moveTo(x+2,y+8);//legs
+	ctx.lineTo(x+2,y+12);//legs
+	ctx.stroke();
+	ctx.closePath();
+	
+}
+
+function getRandomArbitrary(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+function drawStatus(pointX,pointY,text) {
+    ctx.font = "12px Arial";
+    ctx.fillStyle = "#000000";
+    ctx.fillText(text,pointX , pointY);
+}
+function drawPaddle(x,y,width,height,color) {
+    ctx.beginPath();
+    ctx.rect(x, y, width, height);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.closePath();
+}
+
+
+function gameOver(){
+ 	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	ctx.font = "16px Arial";
+	ctx.fillStyle = "#000000";
+	ctx.fillText("GAMEOVER",10 , canvas.height / 2-150); 
+	//clearInterval(interval);
+	gameOverFlag = true;
+	document.getElementById("myButton").hidden = false;
+}
+
+function restartGame(){
+	document.location.reload(); 
+	document.getElementById("myButton").hidden = true;
+	gameOverFlag = false;
+}
+
+function drawStats (text){
+	ctx.font = "20px Arial";
+	ctx.fillStyle = "#000000"
+	ctx.fillText('AC: '+ text,0 , 20);
+}
+
+function changeIndexOfArrayToRight (array){
+	var last = array[array.length -1];
+	for (var i=array.length -1;i>0 ;i--){
+	array[i] = array[i-1];
+	}
+	array[0] = last;
+	for (var j = 0;j<paddlesStatic.length ;j++){
+		array[j].y = paddlesStatic[j].y;
+	}
+	return array;
+} 
+
+function changeIndexOfArrayToLeft (array){
+	var last = array[0];
+	for (var i=0;i < array.length -1;i++){
+	array[i] = array[i+1];
+	}
+	array[array.length -1] = last;
+	for (var j = 0;j<paddlesStatic.length ;j++){
+		array[j].y = paddlesStatic[j].y;
+	}
+	return array;
+} 
+
+function keyDownHandler(e) {
+    if(e.key == "Right" || e.key == "ArrowRight") {
+        rightPressed = true;
+    }
+    else if(e.key == "Left" || e.key == "ArrowLeft") {
+        leftPressed = true;
+    }
+    else if(e.key == "Up" || e.key == "ArrowUp") {
+        upPressed = true;
+    }
+    else if(e.key == "Down" || e.key == "ArrowDown") {
+        downPressed = true;
+    }
+    if (e.key == "Enter" && myButton.hidden == false) {
+	restartGame();
+    }
+}
+
+
+function drawImageOfPaddle(x,y,color) {
+	let widthLine = 3;
+	ctx.beginPath(); 
+	ctx.strokeStyle  = color;
+	ctx.lineWidth = widthLine;	
+	ctx.moveTo(x, y);    
+	ctx.lineTo(x+25, y);  
+	ctx.moveTo(x+5, y+widthLine); 
+	ctx.lineTo(x+20, y+widthLine);
+	ctx.stroke(); 
+	ctx.closePath();
+}
+
+function keyUpHandler(e) {
+    if(e.key == "Right" || e.key == "ArrowRight") {
+        rightPressed = false;
+    }
+    else if(e.key == "Left" || e.key == "ArrowLeft") {
+        leftPressed = false;
+    }
+     else if(e.key == "Up" || e.key == "ArrowUp") {
+        upPressed = false;
+    }
+    else if(e.key == "Down" || e.key == "ArrowDown") {
+        downPressed = false;
+    }
+    
+    
+}
+
+function movePlayerWithKeyboard(){ //change value of var : x
+	/*if(upPressed)
+		y -= 2;
+	if(downPressed)
+		y += 2;*/
+	if(leftPressed){x -= dx;}
+	if (x < 0){x = canvas.width - rectWidth;}
+	if(rightPressed){x += dx;}
+	if (x + rectWidth > canvas.width){x = 0;}
+	x += accZ;
+	
+}
+function collisionDetect(){
+	for(var i=0; i<paddlesDynamic.length ; i++) {
+		var p = paddlesDynamic[i];
+		if(y +  rectHeight  > p.y   && y + rectHeight  < p.y + paddleHeight  && x + rectWidth > p.x && x - rectWidth < p.x + paddleWidth && dy > 0 ) {
+			movePaddelsUpFlag = false;
+			movePaddelsDownFlag = true;
+			p.status = true;
+			switch(p.flyingCount){ //сhoose speed of paddle flying
+				case 1:
+				movePaddlesSpeed = 8;
+				console.log("speed =8");
+				break;
+				case 0.5:
+				movePaddlesSpeed = 6;
+				console.log("speed = 6");
+				break;
+				default:
+				movePaddlesSpeed = 4;
+				console.log("speed = 4");
+				break;
+				}
+			dy = -4;
+			console.log("collision");
+			break;
+		}    	
+	}
+}
+function movePaddle(){
+	for (var i= 0;i<paddlesDynamic.length ;i++){
+		var p = paddlesDynamic[i];
+		if(movePaddelsDownFlag ) {	//moving paddle to down with current speed
+			if(p.y >= canvas.height - paddleHeight - 10 && p.status == true && p.flyingCount <= 0){ // paddle will achive the point near bottom of canvas and  stop 
+				movePaddelsDownFlag = false;
+				movePaddelsUpFlag = false;
+				p.status = false;
+				console.log("stop paddle");
+			}
+			p.y += movePaddlesSpeed;
+		}
+		if(movePaddelsUpFlag)
+			p.y -= 3;
+
+		if (p.y > canvas.height ){
+			if(p.flyingCount > 0 && p.status == true){//we continue to add paddle with status = true in dynamic array, while flyingCount > 0. It is realisation of fly duration
+				p.flyingCount--;
+				let randomProp = GetRandomProperties ();
+				paddlesDynamic.unshift({ x:getRandomArbitrary(60,canvas.width - 60),y: paddlesDynamic[0].y - 50,flyingCount: p.flyingCount,color:paddleColor.get(randomProp),status:true}); 
+				paddlesDynamic.pop();
+			}
+			else {	
+			paddlesDynamic.pop(); //delete paddle which bordering with bottom border
+			let randomProp = GetRandomProperties ();
+			paddlesDynamic.unshift({ x:getRandomArbitrary(60,canvas.width - 60) , y: paddlesDynamic[0].y - 50, flyingCount: paddleFlyingCount.get(randomProp),color:paddleColor.get(randomProp),status : false, });
+			} // add to array new paddle at begin of array
+		}
+		drawImageOfPaddle(p.x,p.y,p.color); // drawing paddle per frame
+		//drawPaddle(p.x,p.y,paddleWidth,paddleHeight,p.color); // drawing paddle per frame
+		//drawStatus(p.x ,p.y+paddleHeight,p.status)  //draw information about paddle position
+	}  
+}GameVarInit();
+function draw() {
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	movePaddle();
+	//drawRect();
+	
+	//drawStats(info);
+	drawPlayer(x,y);
+	collisionDetect();
+	movePlayerWithKeyboard();
+	y += dy ;
+ 	if (y + rectHeight <= canvas.height / 2 ){ // max Y point for paddle (middle of canvas)
+		if(movePaddelsDownFlag)
+			dy = 0; //stop move of Player
+		else if (!movePaddelsDownFlag){	
+			dy = 3; //move Player to down
+		}
+	
+	} 
+
+	if (y > canvas.height - 40 - paddleHeight) //if paddle will achive Y point in statement, then move paddle up 
+		movePaddelsUpFlag = true;
+	else
+		movePaddelsUpFlag = false;
+		
+	if(y + rectHeight > bottomBorderForGameOver)  //if Player pos will descend to bottom then GameOver();		gameOver();
+
+	if (!gameOverFlag) //drawing animation frame
+		requestAnimationFrame(draw);
+}
+document.addEventListener("keydown", keyDownHandler, false);
+document.addEventListener("keyup", keyUpHandler, false);
+draw();
+
+</script>
+</body>
+</html>
