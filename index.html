@@ -49,10 +49,13 @@ var dx = 5;
 var dy = 1; //start speed
 
 var rightPressed = false;
-var leftPressed = false;var upPressed = false;var downPressed = false;
+var leftPressed = false;
+var upPressed = false;
+var downPressed = false;
 
 var paddleHeight = 6;
-var paddleWidth = 20;
+var paddleWidth = 20;
+
 var brickRowCount = 14;
 
 var movePaddelsUpFlag = false;
@@ -113,7 +116,8 @@ function GameVarInit(){
 	}
 	paddlesDynamic  = copy(paddlesStatic);
 	
-}
+}
+
 function copy(aObject) {
   if (!aObject) {
     return aObject;
@@ -125,13 +129,20 @@ function copy(aObject) {
     bObject[k] = (typeof v === "object") ? copy(v) : v;
   }
   return bObject;
-}
-function drawRect() {
-    ctx.beginPath();
-    ctx.rect(x, y, rectWidth, rectHeight);
-    ctx.fillStyle = "#0095DD";
-    ctx.fill();
-    ctx.closePath();
+}
+
+function drawRect() {
+
+    ctx.beginPath();
+
+    ctx.rect(x, y, rectWidth, rectHeight);
+
+    ctx.fillStyle = "#0095DD";
+
+    ctx.fill();
+
+    ctx.closePath();
+
 }
 
 function drawPlayer(x,y) {
@@ -157,23 +168,40 @@ function drawPlayer(x,y) {
 	ctx.closePath();
 	
 }
-
-function getRandomArbitrary(min, max) {
-  return Math.random() * (max - min) + min;
-}
-
-function drawStatus(pointX,pointY,text) {
-    ctx.font = "12px Arial";
-    ctx.fillStyle = "#000000";
-    ctx.fillText(text,pointX , pointY);
-}
-function drawPaddle(x,y,width,height,color) {
-    ctx.beginPath();
-    ctx.rect(x, y, width, height);
-    ctx.fillStyle = color;
-    ctx.fill();
-    ctx.closePath();
-}
+
+
+function getRandomArbitrary(min, max) {
+
+  return Math.random() * (max - min) + min;
+
+}
+
+
+
+function drawStatus(pointX,pointY,text) {
+
+    ctx.font = "12px Arial";
+
+    ctx.fillStyle = "#000000";
+
+    ctx.fillText(text,pointX , pointY);
+
+}
+
+function drawPaddle(x,y,width,height,color) {
+
+    ctx.beginPath();
+
+    ctx.rect(x, y, width, height);
+
+    ctx.fillStyle = color;
+
+    ctx.fill();
+
+    ctx.closePath();
+
+}
+
 
 
 function gameOver(){
@@ -283,7 +311,8 @@ function movePlayerWithKeyboard(){ //change value of var : x
 	x += accZ;
 	
 }
-function collisionDetect(){
+
+function collisionDetect(){
 	for(var i=0; i<paddlesDynamic.length ; i++) {
 		var p = paddlesDynamic[i];
 		if(y +  rectHeight  > p.y   && y + rectHeight  < p.y + paddleHeight  && x + rectWidth > p.x && x - rectWidth < p.x + paddleWidth && dy > 0 ) {
@@ -309,7 +338,8 @@ function movePlayerWithKeyboard(){ //change value of var : x
 			break;
 		}    	
 	}
-}
+}
+
 function movePaddle(){
 	for (var i= 0;i<paddlesDynamic.length ;i++){
 		var p = paddlesDynamic[i];
@@ -342,7 +372,9 @@ function movePaddle(){
 		//drawPaddle(p.x,p.y,paddleWidth,paddleHeight,p.color); // drawing paddle per frame
 		//drawStatus(p.x ,p.y+paddleHeight,p.status)  //draw information about paddle position
 	}  
-}GameVarInit();
+}
+
+GameVarInit();
 function draw() {
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	movePaddle();
@@ -367,14 +399,19 @@ function draw() {
 	else
 		movePaddelsUpFlag = false;
 		
-	if(y + rectHeight > bottomBorderForGameOver)  //if Player pos will descend to bottom then GameOver();		gameOver();
+
+	if(y + rectHeight > bottomBorderForGameOver)  //if Player pos will descend to bottom then GameOver();
+		gameOver();
 
 	if (!gameOverFlag) //drawing animation frame
-		requestAnimationFrame(draw);
-}
+		requestAnimationFrame(draw);
+
+}
+
 document.addEventListener("keydown", keyDownHandler, false);
 document.addEventListener("keyup", keyUpHandler, false);
-draw();
+
+draw();
 
 </script>
 </body>
